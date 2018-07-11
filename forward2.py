@@ -1,5 +1,8 @@
+#!/usr/bin/env python
+
 import rospy
 from ackermann_msgs.msg import AckermannDriveStamped
+# Written by Joshua Smith
 
 def forward(myMsg):
     myMsg.drive.steering_angle = 1
