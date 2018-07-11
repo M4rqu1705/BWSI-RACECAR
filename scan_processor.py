@@ -1,7 +1,6 @@
 #!/usr/bin/env python2
 
 import numpy as np
-
 import rospy
 from rospy.numpy_msg import numpy_msg
 from sensor_msgs.msg import LaserScan
@@ -18,6 +17,7 @@ class ScanProcessor:
 
     def callback(self, data):
         ranges = np.array(data.ranges)
+        
         if self.last_ranges is not None:
             invalid_ranges = np.isinf(ranges)
             ranges[invalid_ranges] = self.last_ranges[invalid_ranges]
@@ -34,4 +34,4 @@ class ScanProcessor:
 if __name__ == "__main__":
     rospy.init_node('scan_processor')
     scan_processor = ScanProcessor()
-    rospy.spin()
+rospy.spin()

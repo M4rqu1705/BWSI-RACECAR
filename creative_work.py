@@ -9,6 +9,7 @@ def move_racecar(_speed, _angle, _iterations):
     rospy.init_node('creative_project_node',  anonymous=True)
     pub = rospy.Publisher('/vesc/high_level/ackermann_cmd_mux/input/nav_0', AckermannDriveStamped, queue_size=10)
     rate = rospy.Rate(10)
+    
     for i in range(0,_iterations):
 	msg = AckermannDriveStamped()
 	msg.drive.speed = _speed
