@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 
 import rospy
+import numpy as np
 from sensor_msgs.msg import LaserScan
 from ackermann_msgs.msg import AckermannDriveStamped
 
 
 class safety_controller:
 
-    laser_ranges = [x for x in range(0,897)]
+    laser_ranges = np.array([x for x in range(0,897)])
+    past_readings = np.array([0 for x in range(0,3)])
 
     def __init__(self):              
         self.laser_sub = rospy.Subscriber("/scan_processed", LaserScan, self.laser_callback, queue_size=1)  
@@ -18,8 +20,24 @@ class safety_controller:
 
     def laser_callback(self, scan_data):  
         global laser_ranges
-        laser_ranges = scan_data.ranges
-	mid_data_range = scan_data.ranges[int(len(scan_data.ranges)/2)] 
+        
+        # Update the global laser_range's value with the new scans
+        laser_ranges = np.array(scan_data.ranges)
+        
+        # Assign the reading directly forward to the variable mid_data_range
+	mid_data_range = laser_ranges[int(laser_ranges.size/2)] 
+
+        # ------- Median filter --------
+
+        np.delete(past_readings, 0) # Remove oldest/ left-most value
+        np.append(past_readings, mid_data_range)    # Add new value
+
+        # Sort the past readings and look for the median. Assign the median to mid_data_range
+        mid_data_range = (np.sort(past_readings, kind='mergesort'))[int(past_readings.size/2)]
+
+        # ------- Median filter --------
+
+        # Send the stop signal only if the measured obstacle is within the distance threshold or is equal to 200
         if mid_data_range < self.distance_threshold or mid_data_range == 200 :   
             self.stop = True  
         else: 
@@ -28,8 +46,10 @@ class safety_controller:
 
 
     def drive_callback(self, drive_msg): 
+
+        # If self.stop is true, make the robot follow an algorithm
         if self.stop:
-            if laser_ranges[int(len(laser_ranges)/4)] < laser_ranges[int(len(laser_ranges)*3/4)]:
+            if laser_ranges[int(len(laser_ranges) * 3.0/8.0)] < laser_ranges[int(len(laser_ranges) * 5.0/8.0)]:
                 drive_msg.drive.steering_angle = -1
             else:
                 drive_msg.drive.steering_angle = 1
