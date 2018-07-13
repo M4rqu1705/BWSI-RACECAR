@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import rospy
+import numpy as np
 from ackermann_msgs.msg import AckermannDriveStamped
 from sensor_msgs.msg import LaserScan
 from PFController import pfController
@@ -26,16 +27,17 @@ drive_pub = rospy.Publisher("/vesc/high_level/ackermann_cmd_mux/input/nav_0", Ac
 
 def laser_callback(data):
     global laser_readings
-    laser_readings = data.ranges
+    laser_readings = np.array(data.ranges)
+    laser_readings[laser_readings == 200] = 0.3
 
 scanner_sub = rospy.Subscriber("/scan_processed", LaserScan, laser_callback, queue_size = 10)
 
 
 # Instantiate the pfController class
-pf_controller = pfController(0.01, 0.01, 1)
+pf_controller = pfController(0.0072, 0.01, 350)
 
 # Instantiate rate object at 10 hertz
-rate = rospy.Rate(10)
+rate = rospy.Rate(30)
 
 # Eternally run loop
 while not rospy.is_shutdown():
