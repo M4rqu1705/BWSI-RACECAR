@@ -25,8 +25,8 @@ class pfController:
         xArray = np.empty(partialReadings, dtype = float)
         yArray = np.empty(partialReadings, dtype = float)
 
-        xArray = np.true_divide(np.cos(angles), np.power(myScan, .25))
-        yArray = np.true_divide(np.sin(angles), np.power(myScan, .25))
+        xArray = np.true_divide(np.cos(angles), np.power(myScan, .2))
+        yArray = np.true_divide(np.sin(angles), np.power(myScan, .2))
 
 
         finalX = (np.sum(xArray)+ self.backChargeSize) * self.speedScale
