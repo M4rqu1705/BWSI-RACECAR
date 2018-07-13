@@ -3,6 +3,7 @@ import rospy
 import math
 import numpy as np
 from sensor_msgs.msg import LaserScan
+
 class pfController:
 
     steeringScale = None
@@ -17,16 +18,13 @@ class pfController:
 
     def compute(self, scan):
         self.totalReadings = len(scan)
-        myScan = self.partialScan(self.totalReadings/6, (5*self.totalReadings)/6, scan)
+        myScan = self.partialScan(self.totalReadings/8, (7*self.totalReadings)/8, scan)
         partialReadings = len(myScan)
         angles = np.arange(self.totalReadings/8, (7*self.totalReadings)/8, dtype=float)
         angles = np.multiply(angles, (2*math.pi)/self.totalReadings)
 
-        xArray = np.empty(partialReadings, dtype = float)
-        yArray = np.empty(partialReadings, dtype = float)
-        for i in range(partialReadings):
-            xArray[i] = math.cos(angles[i])/myScan[i]
-            yArray[i] = math.sin(angles[i])/myScan[i]
+        xArray = np.true_divide(np.cos(angles), myScan)
+        yArray = np.true_divide(np.sin(angles), myScan)
 
 
         finalX = (np.sum(xArray)+ self.backChargeSize) * self.speedScale
