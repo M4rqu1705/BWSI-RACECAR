@@ -34,8 +34,8 @@ def method_1(car_charge, wall_charges, pushing_charge):
     radians = np.radians(angles)
 
     # Look for the cos and sin of specific angles so not every force equally contributes to the robot's movement
-    steering_angle = np.sum(np.multiply(np.cos(radians), forces))
-    speed = np.sum(np.multiply(np.sin(radians), forces))
+    steering_angle = np.sum(np.multiply(np.sin(radians), forces))
+    speed = np.sum(np.multiply(np.cos(radians), forces))
 
     # Without the pushing charge, the robot would move forward forever
     speed += pushing_charge
@@ -46,7 +46,7 @@ def method_1(car_charge, wall_charges, pushing_charge):
         max_steer = steering_angle
 
     speed = map(speed, -max_speed, max_speed, -1, 1)
-    steering_angle = -map(steering_angle, -max_steer, max_steer, -1, 1)
+    steering_angle = -map(steering_angle, -max_steer, max_steer, 1, -1)
     
     return speed, steering_angle
 
