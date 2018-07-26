@@ -4,11 +4,13 @@ import numpy as np
 cv2.namedWindow('Video', cv2.WINDOW_NORMAL)
 cv2.namedWindow('Edges', cv2.WINDOW_NORMAL)
 
-cap = cv2.VideoCapture(0)
-
+#cap = cv2.VideoCapture(0)
+cam_sub = rospy.Subscriber("/zed/rgb/image_rect_color", Image, self.cam_callback, queue_size = 10)
+img_cv = bridge.imgmsg_to_cv2(img)
+img_cv = cv2.cvtColor(img_cv, cv2.COLOR_BGR2HSV)
 while True:
     # Capture the frames
-    _, frame = cap.read()
+    _, frame = img_cv.read()
 
     # Resize the frames
     frame = cv2.resize(frame, (0,0), fx=0.25, fy=0.25) 

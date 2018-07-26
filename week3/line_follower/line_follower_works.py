@@ -183,49 +183,35 @@ class line_follower():
 
         # Make a boolean list to list what contours were found
         colors_found = [False, False, False, False]
-        
-        contour_area_list = []
 
         if len(yellow_contours) > 0:
             # Find the biggest contour, if the contour list is bigger than 0
             biggest_yellow_contour = max(yellow_contours, key=cv2.contourArea)
-            contour_area_list += [cv2.contourArea(biggest_yellow_contour)]
+            # Update the yellow's entry in the colors_found array
+            if cv2.contourArea(biggest_yellow_contour) > 30:
+                colors_found[0] = True
         if len(green_contours) > 0:
             # Find the biggest contour, if the contour list is bigger than 0
             biggest_green_contour = max(green_contours, key=cv2.contourArea)
-            contour_area_list += [cv2.contourArea(biggest_green_contour)]
+            # Update the green's entry in the colors_found array
+            if cv2.contourArea(biggest_green_contour) > 30:
+                colors_found[1] = True
         if len(blue_contours) > 0:
             # Find the biggest contour, if the contour list is bigger than 0
             biggest_blue_contour = max(blue_contours, key=cv2.contourArea)
-            contour_area_list += [cv2.contourArea(biggest_blue_contour)]
+            # Update the blue's entry in the colors_found array
+            if cv2.contourArea(biggest_blue_contour) > 30:
+                colors_found[2] = True
         if len(orange_contours) > 0:
             # Find the biggest contour, if the contour list is bigger than 0
             biggest_orange_contour = max(orange_contours, key=cv2.contourArea)
-            contour_area_list += [cv2.contourArea(biggest_orange_contour)]
-
-
-        
-        biggest_contour = 0
-        # Take the biggest contour out of all the 4 colors
-        for item in contour_area_list:
-            if biggest_contour < item:
-                biggest_contour = item
-            
- 
-        # Decide which line to follow
-        if not isinstance(biggest_yellow_contour, int):
-            if cv2.contourArea(biggest_yellow_contour) == biggest_contour and cv2.contourArea(biggest_yellow_contour) > 30:
-                colors_found[0] = True
-        elif not isinstance(biggest_green_contour, int):
-            if cv2.contourArea(biggest_green_contour) == biggest_contour and cv2.contourArea(biggest_green_contour) > 30:
-                colors_found[1] = True
-        elif not isinstance(biggest_blue_contour, int):
-            if cv2.contourArea(biggest_blue_contour) == biggest_contour and cv2.contourArea(biggest_blue_contour) > 30:
-                colors_found[2] = True
-        elif not isinstance(biggest_orange_contour, int):
-            if cv2.contourArea(biggest_orange_contour) == biggest_contour and cv2.contourArea(biggest_orange_contour) > 30:
+            # Update the orange's entry in the colors_found array
+            if cv2.contourArea(biggest_orange_contour) > 30:
                 colors_found[3] = True
 
+        #  contour_list = [cv2.contourArea(biggest_yellow_contour), cv2.contourArea(biggest_green_contour), cv2.contourArea(biggest_blue_contour), cv2.contourArea(biggest_orange_contour)]
+#  
+        #  if cv2.contourArea
 
         moment = None
 
@@ -286,7 +272,7 @@ class line_follower():
 
 
         self.steering_angle = self.PID.calculate( self.image_width/4, center_x/2)
-        self.speed = 0.75
+        self.speed = 1
 
         # Two different images to publish to the line_follower topic
         #  self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv2.cvtColor(cropped_image, cv2.COLOR_HSV2BGR), encoding="bgr8"))
