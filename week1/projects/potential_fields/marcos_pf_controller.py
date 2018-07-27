@@ -5,30 +5,26 @@ from ackermann_msgs.msg import AckermannDriveStamped
 from sensor_msgs.msg import LaserScan
 
 laser_readings = np.array([x for x in range(1081)])
-max_steer, max_speed = 0, 0
 
 def laser_callback(data):
     global laser_readings
     laser_readings = np.array(data.ranges)      # Convert received value list to numpy array
-    laser_readings[laser_readings >= 200] = 0.4 # Replace every 'faulty' sensor reading for 0.4
-
-def map(x, in_min, in_max, out_min, out_max):
-  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+    #  print laser_readings[540:542]
+    #  laser_readings[laser_readings >= 200] = 0.4 # Replace every 'faulty' sensor reading for 0.4
 
 def method_1(car_charge, wall_charges, pushing_charge):
     global laser_readings
-    global max_steer
-    global max_speed
 
     # Calculate the forces acting on the robot using Coulomb's law
     forces = np.true_divide(car_charge * wall_charges, np.square(laser_readings))
 
     # List the angle of each reading corresponding forces
-    angles = np.array([x for x in np.linspace(0, 360, laser_readings.size)])
+    angles = np.array([x for x in np.linspace(0, 270, laser_readings.size)])
+    np.add(angles, 45)
     
     # Discard 1/4 of the readings because the racecar interferes with them
-    forces = forces[int(1.0/8.0 * forces.size): int(7.0/8.0 * forces.size)]
-    angles = angles[int(1.0/8.0 * angles.size): int(7.0/8.0 * angles.size)]
+    #  forces = forces[int(1.0/8.0 * forces.size): int(7.0/8.0 * forces.size)]
+    #  angles = angles[int(1.0/8.0 * angles.size): int(7.0/8.0 * angles.size)]
 
     # Convert angles from degrees to radians
     radians = np.radians(angles)
@@ -40,15 +36,8 @@ def method_1(car_charge, wall_charges, pushing_charge):
     # Without the pushing charge, the robot would move forward forever
     speed += pushing_charge
 
-    if speed > max_speed:
-        max_speed = speed
-    if steering_angle > max_steer:
-        max_steer = steering_angle
-
-    speed = map(speed, -max_speed, max_speed, -1, 1)
-    steering_angle = -map(steering_angle, -max_steer, max_steer, 1, -1)
     
-    return speed, steering_angle
+    return speed*0.1, steering_angle*0.1
 
 
 def move_racecar(speed, steering_angle):
@@ -85,7 +74,7 @@ if __name__ == "__main__":
     drive_pub = rospy.Publisher("/vesc/high_level/ackermann_cmd_mux/input/nav_0", AckermannDriveStamped, queue_size = 10)
 
     # Create /scan_processed subscriber
-    scanner_sub = rospy.Subscriber("/scan_processed", LaserScan, laser_callback, queue_size = 10)
+    scanner_sub = rospy.Subscriber("/scan", LaserScan, laser_callback, queue_size = 10)
 
     # Instantiate rate object at 10 hertz
     rate = rospy.Rate(10)
@@ -95,7 +84,7 @@ if __name__ == "__main__":
     while not rospy.is_shutdown():
 
         # Retrieve the potential fields controller output based on laser readings
-        speed, steering_angle = method_1(0.001, 0.001, 1000)
+        speed, steering_angle = method_1(0.1, 0.1, 10)
 
         # Move the racecar according to the desired steering angle and speed
         move_racecar(speed, steering_angle) 
