@@ -105,6 +105,8 @@ class Potential_Fields_Controller:
 
 front_distance, left_distance, right_distance = 0, 0, 0
 laser_ranges = np.array([x for x in range(0, 1081)])
+last_ar_marker = 0
+ar_tag_list = []
 
 
 def scanCallback(scan):
@@ -138,18 +140,35 @@ if __name__ == "__main__":
 
 
     while not rospy.is_shutdown():
+        ar_tag_list = ar_sub.get_tag_list()
+
+        print last_ar_marker
+
+        if len(ar_tag_list) > 0:
+            if ar_tag_list[0]["id"] == 1:
+                last_ar_marker = 1
+            elif ar_tag_list[0]["id"] == 2:
+                last_ar_marker = 2
+            elif ar_tag_list[0]["id"] == 3:
+                last_ar_marker = 3
+            elif ar_tag_list[0]["id"] == 4:
+                last_ar_marker = 4
+            elif ar_tag_list[0]["id"] == 5:
+                last_ar_marker = 5
+            elif ar_tag_list[0]["id"] == 6:
+                last_ar_marker = 6
 
         msg = AckermannDriveStamped()
 
-        if ar_sub.ar_tag_list[0]["id"] == 1:
+        if last_ar_marker == 4:
             # left line follow
             msg.drive.speed = 1
             msg.drive.steering_angle = steering_angle_pid.calculate(1, left_distance)
-        elif ar_sub.ar_tag_list[0]["id"] == 2:
+        elif last_ar_marker == 5:
             # right line follow
             msg.drive.speed = 1
             msg.drive.steering_angle = steering_angle_pid.calculate(1, right_distance)
-        elif ar_sub.ar_tag_list[0]["id"] == 3:
+        elif last_ar_marker == 6:
             # potential fields
             msg.drive.speed, msg.drive.steering_angle = potential_fields.calculate(laser_ranges)
 
