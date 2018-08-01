@@ -98,14 +98,14 @@ class Potential_Fields_Controller:
         speed = self.speed_coefficient*speed
         steering_angle = self.steering_angle_coefficient*steering_angle
 
-        print "Speed = %s, Steering Angle = %s" % (speed, steering_angle)
+        #  print "Speed = %s, Steering Angle = %s" % (speed, steering_angle)
 
         # Returns values after calculation 
         return speed, steering_angle
 
 front_distance, left_distance, right_distance = 0, 0, 0
 laser_ranges = np.array([x for x in range(0, 1081)])
-last_ar_marker = 0
+last_ar_marker = 22
 ar_tag_list = []
 
 
@@ -144,32 +144,22 @@ if __name__ == "__main__":
 
         print last_ar_marker
 
-        if len(ar_tag_list) > 0:
-            if ar_tag_list[0]["id"] == 1:
-                last_ar_marker = 1
-            elif ar_tag_list[0]["id"] == 2:
-                last_ar_marker = 2
-            elif ar_tag_list[0]["id"] == 3:
-                last_ar_marker = 3
-            elif ar_tag_list[0]["id"] == 4:
-                last_ar_marker = 4
-            elif ar_tag_list[0]["id"] == 5:
-                last_ar_marker = 5
-            elif ar_tag_list[0]["id"] == 6:
-                last_ar_marker = 6
+        if len(ar_tag_list) > 0 and ar_tag_list[0]["z"] < 0.4:
+            last_ar_marker = ar_tag_list[0]["id"]
+            #  print ar_tag_list[0]["z"]
 
         msg = AckermannDriveStamped()
 
-        if last_ar_marker == 4:
-            # left line follow
+        if last_ar_marker == 18 or last_ar_marker == 22:
+            # Change to left line following
             msg.drive.speed = 1
-            msg.drive.steering_angle = steering_angle_pid.calculate(1, left_distance)
-        elif last_ar_marker == 5:
-            # right line follow
+            msg.drive.steering_angle = -steering_angle_pid.calculate(0.75, left_distance)
+        elif last_ar_marker == 19:
+            # Change to right line following
             msg.drive.speed = 1
-            msg.drive.steering_angle = steering_angle_pid.calculate(1, right_distance)
-        elif last_ar_marker == 6:
-            # potential fields
+            msg.drive.steering_angle = -steering_angle_pid.calculate(0.5, right_distance)
+        elif last_ar_marker == 23:
+            # Change to potential fields controlling
             msg.drive.speed, msg.drive.steering_angle = potential_fields.calculate(laser_ranges)
 
 
