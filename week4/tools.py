@@ -1,25 +1,27 @@
 #!/usr/bin/env python
 
-from time import time
 import numpy as np
-import rospy
-from sensor_msgs.msg import LaserScan
-from ackermann_msgs.msg import AckermannDriveStamped
-import ar_pose_retriever as ar
+from time import time
 
-class Pid_Controller:
+class pid_controller:
 
     def __init__(self, KP, KI, KD):
         ''' Constructor: KP, KI, KD'''
+        self.set_gains(KP, KI, KD)
+        self.reset()
+
+    def set_gains(self, KP, KI, KD):
         self.KP = KP    # Initialize KP to a value specified by constructor parameters
         self.KI = KI    # Initialize KI to a value specified by constructor parameters
         self.KD = KD    # Initialize KD to a value specified by constructor parameters
 
-        # Initialize error, last error and integral to 0 by default
+    def reset(self):
+        # Reset error, last error and integral to 0 
         self.error = self.last_error = self.integral = 0
 
         # Store the current time as the last_count variable
         self.last_count = time()
+
 
     def calculate(self, setpoint, process_value):
         ''' Calculate desired output: setpoint, process_value '''
@@ -28,7 +30,9 @@ class Pid_Controller:
         self.error = setpoint - process_value
 
         # ID - Change in time later used to improve integral and derivative calculations
-        change_in_time = (time() - self.last_count)     # Time seconds
+        change_in_time = (time() - self.last_count) 
+        if change_in_time == 0:
+            change_in_time = 0.001
 
         # I - Accumulate error
         self.integral += self.error * change_in_time
@@ -48,7 +52,7 @@ class Pid_Controller:
         self.last_count = time()
 
         return output
-    
+
 
 
 class Potential_Fields_Controller:
@@ -76,6 +80,15 @@ class Potential_Fields_Controller:
 
         # r will be the individual laser readings
 
+    def set_charges(car_charges, wall_charges, push_charge):
+        self.car_charge = car_charges
+        self.wall_charges = wall_charges
+        self.push_charge = push_charge
+
+    def set_coefficients(speed_coefficient, steering_angle_coefficient):
+        self.speed_coefficient = speed_coefficient
+        self.steering_angle_coefficient = steering_angle_coefficient
+
     def calculate(self, laser_readings):
 
         # Calcuate the forces acting on the robot using Coulomb's law
@@ -98,83 +111,13 @@ class Potential_Fields_Controller:
         speed = self.speed_coefficient*speed
         steering_angle = self.steering_angle_coefficient*steering_angle
 
-        #  print "Speed = %s, Steering Angle = %s" % (speed, steering_angle)
+        print "Speed = %s, Steering Angle = %s" % (speed, steering_angle)
 
         # Returns values after calculation 
         return speed, steering_angle
 
-laser_ranges = np.array([x for x in range(0, 1081)])
-last_ar_marker = 22
-ar_tag_list = []
-
-
-def scanCallback(scan):
-    global laser_ranges
-    
-    laser_ranges = np.array(scan.ranges)
-
 if __name__ == "__main__":
-  
-  # Initialize ROS node called wall_follower
-  rospy.init_node('wall_follower')
+    pf_object = Potential_Fields_Controller(0.05, 0.05, 1.75, 0.5, 0.5)
 
-  # ========= ========= ========= ========= ========= ========= Object instantiation ==========  ==========  ==========  ==========  ==========  ========== #
-
-  pub = rospy.Publisher('/vesc/high_level/ackermann_cmd_mux/input/nav_0', AckermannDriveStamped, queue_size = 10)
-
-  sub = rospy.Subscriber('/scan', LaserScan, scanCallback, queue_size = 10)
-
-  ar_sub = ar.ar_pose_retriever()
-
-  steering_angle_pid = Pid_Controller(1, 0, 0.3)
-
-  potential_fields = Potential_Fields_Controller(0.05, 0.05, 1.75, 0.5, 0.5)
-
-  rate = rospy.Rate(30)
-
-  # ========= ========= ========= ========= ========= ========= Object instantiation ==========  ==========  ==========  ==========  ==========  ========== #
-
-  while not rospy.is_shutdown():
-      ar_tag_list = ar_sub.get_tag_list()
-      
-      if len(ar_tag_list) > 0 and ar_tag_list[0]["z"] < 0.4:
-          last_ar_marker = ar_tag_list[0]["id"]
-
-      msg = AckermannDriveStamped()
-
-      if last_ar_marker == 18 or last_ar_marker == 22:
-        '''
-
-        The reason why we use the law of cosines is to make sharper turns. 
-        By using this tool we can make the wall follower more stable and 
-        although we might manually tune the desired distance, it helps us
-        detect turns even before the RACECAR gets to them
-
-        c = a^2 + b^2 - 2*a*b*cos(theta)
-
-        '''
-
-          a, b = laser_ranges[720], laser_ranges[1080]
-          # Law of cosines to calculate the length of leg c
-          c = np.power(a,2) + np.power(b,2) - 2*a*b*np.cos(np.pi/2.0)
-
-          # Change to left line following
-          msg.drive.speed = 1
-          msg.drive.steering_angle = -steering_angle_pid.calculate(1,c)
-
-      elif last_ar_marker == 19:
-          a, b = laser_ranges[360], laser_ranges[0]
-          # Law of cosines to calculate the length of leg c
-          c = np.power(a,2) + np.power(b,2) - 2*a*b*np.cos(np.pi/2.0)
-          # Change to right line following
-          msg.drive.speed = 2
-          msg.drive.steering_angle = -steering_angle_pid.calculate(1,c)
-
-      elif last_ar_marker == 23:
-          # Change to potential fields controlling
-          msg.drive.speed, msg.drive.steering_angle = potential_fields.calculate(laser_ranges)
-
-
-      pub.publish(msg)
-
-      rate.sleep()
+    for i in range(1,20):
+        print pf_object.calculate(np.array([i for x in range(0, 1081)]))
