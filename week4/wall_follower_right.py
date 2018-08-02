@@ -88,8 +88,8 @@ while not rospy.is_shutdown():
 
     '''
 
-    diagonal_front = np.average(laser_ranges[720-10:720+10])
-    diagonal_back = np.average(laser_ranges[1080-20:1080])
+    diagonal_front = np.average(laser_ranges[360-10:360+10])
+    diagonal_back = np.average(laser_ranges[0:0+20])
     
 
     turn_visible = bool(diagonal_front > diagonal_back*3)
@@ -105,7 +105,7 @@ while not rospy.is_shutdown():
 
         # Change to left wall following
         msg.drive.speed = 3
-        msg.drive.steering_angle = -steering_angle_turn_pid.calculate(45, np.degrees(A))
+        msg.drive.steering_angle = steering_angle_turn_pid.calculate(45, np.degrees(A))
         #  print msg.drive.steering_angle
         print 'Turning'
 
@@ -113,7 +113,7 @@ while not rospy.is_shutdown():
         c = diagonal_front
 
         msg.drive.speed = 3
-        msg.drive.steering_angle = -steering_angle_straight_pid.calculate(1, c)
+        msg.drive.steering_angle = steering_angle_straight_pid.calculate(1, c)
         #  print msg.drive.steering_angle
         print 'Forward'
 
