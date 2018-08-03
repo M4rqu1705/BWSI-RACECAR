@@ -55,7 +55,7 @@ def scanCallback(scan):
     global laser_ranges
 
     laser_ranges = np.array(scan.ranges)
-
+    print laser_ranges[900]
 if __name__ == "__main__":
 
     # Initialize ROS node called wall_follower
@@ -107,7 +107,7 @@ while not rospy.is_shutdown():
         msg.drive.speed = 3
         msg.drive.steering_angle = -steering_angle_turn_pid.calculate(45, np.degrees(A))
         #  print msg.drive.steering_angle
-        print 'Turning'
+        #  print 'Turning'
 
     else:
         c = diagonal_front
@@ -115,7 +115,7 @@ while not rospy.is_shutdown():
         msg.drive.speed = 3
         msg.drive.steering_angle = -steering_angle_straight_pid.calculate(1, c)
         #  print msg.drive.steering_angle
-        print 'Forward'
+        #  print 'Forward'
 
     pub.publish(msg)
 
