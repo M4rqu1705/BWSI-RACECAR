@@ -138,11 +138,11 @@ class Wall_Follower:
         diagonal_front, diagonal_back = 0,0
         steering_coefficient = 0
 
-        if str(direction).lower() in ['right', 'r', 'True', '1']:
+        if str(direction).lower() in ['right', 'r', 'true', '1']:
             diagonal_front = np.average(laser_ranges[360-10:360+10])
             diagonal_back = np.average(laser_ranges[0:0+20])
             steering_coefficient = 1
-        elif str(direction).lower() in ['left', 'l', 'False', '0']:
+        elif str(direction).lower() in ['left', 'l', 'false', '0']:
             diagonal_front = np.average(laser_ranges[720-10:720+10])
             diagonal_back = np.average(laser_ranges[1080-20:1080])
             steering_coefficient = -1
@@ -216,19 +216,3 @@ class Start_Light:
         return self.going
 
 
-
-
-
-        
-
-
-
-    
-
-
-
-if __name__ == "__main__":
-    wall_follow = Wall_Follower([1,0,0], [1/30.0, 0, 0])
-
-    for i in range(3):
-        print wall_follow.calculate('l', 1, np.array([i for x in range(1081)]))
